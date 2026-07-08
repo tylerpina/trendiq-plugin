@@ -54,6 +54,24 @@ TRENDIQ_API_BASE_URL=http://localhost:3001/api
 - `interpret-signals` — react to volume spikes / whale clusters / pro convergence
 - `create-indicator` — author any valid TrendIQ custom-indicator formula
 
+## Development
+
+The plugin source lives in `mcp-engine/` (TypeScript); the shipped, self-contained
+bundle is committed at `mcp-plugin/engine/dist/mcp.js`.
+
+```bash
+cd mcp-engine
+npm install
+npm test          # vitest unit tests
+npm run typecheck
+npm run build     # tsup bundle → synced into ../mcp-plugin/engine/dist/mcp.js
+npm run smoke     # exercise every tool against the live API
+```
+
+Skills are plain markdown under `mcp-plugin/skills/`. When cutting a release,
+bump the version in both `mcp-plugin/.claude-plugin/plugin.json` and
+`.claude-plugin/marketplace.json` (they must agree).
+
 ## Notes
 
 - **Read-only.** No trades, no writes, no account state — analytics only.

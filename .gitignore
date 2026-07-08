@@ -1,0 +1,8 @@
+# Build deps / output (rebuildable)
+mcp-engine/node_modules/
+mcp-engine/dist/
+
+# The shipped, self-contained bundle IS committed:
+!mcp-plugin/engine/dist/mcp.js
+
+.DS_Store
