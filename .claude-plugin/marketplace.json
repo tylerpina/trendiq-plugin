@@ -1,0 +1,13 @@
+{
+  "name": "trendiq",
+  "owner": { "name": "tylerpina" },
+  "description": "TrendIQ analytics plugin for Claude Code — read-only prediction-market tools (Kalshi + Polymarket) plus analyst skills.",
+  "plugins": [
+    {
+      "name": "trendiq",
+      "source": "./mcp-plugin",
+      "version": "0.2.0",
+      "description": "Read-only TrendIQ analytics MCP (20 tools) + 7 analyst skills (analyze-a-market, investigate-a-whale, find-cross-platform-arbitrage, read-market-sentiment-divergence, screen-for-opportunities, interpret-signals, create-indicator)."
+    }
+  ]
+}

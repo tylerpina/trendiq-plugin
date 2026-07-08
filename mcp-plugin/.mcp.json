@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "trendiq": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/engine/dist/mcp.js"],
+      "env": { "TRENDIQ_API_BASE_URL": "https://trendiq.pro/api" }
+    }
+  }
+}

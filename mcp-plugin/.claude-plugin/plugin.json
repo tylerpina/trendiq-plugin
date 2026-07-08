@@ -1,0 +1,6 @@
+{
+  "name": "trendiq",
+  "version": "0.2.0",
+  "description": "Make an agent a prediction-market analyst on TrendIQ: read-only tools over the Kalshi/Polymarket API (markets, candles, whales, arbitrage, sentiment, signals) plus analyst skills.",
+  "author": { "name": "tylerpina" }
+}
