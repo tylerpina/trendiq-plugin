@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "build": "tsup && npm run sync-plugin",
+    "build:bundle": "tsup",
     "sync-plugin": "mkdir -p ../mcp-plugin/engine/dist && cp dist/mcp.js ../mcp-plugin/engine/dist/",
     "smoke": "tsx scripts/smoke.ts",
     "test": "vitest run",
