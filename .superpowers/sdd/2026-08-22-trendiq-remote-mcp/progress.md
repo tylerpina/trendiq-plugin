@@ -18,3 +18,8 @@ Branch: `feat/remote-mcp-server` (from main @ 4fb482d). Lock: `.opencode/state/l
 - Timeout: Promise.race backstop → JSON-RPC -32000; upstream failures surface as MCP isError results via client's own 20s fetch bound.
 - 22 new tests; suite 57/57; typecheck clean. Committed.
 - Uncovered (disclosed): parseErrorHandler fallthrough plumbing; main()/listen blocks.
+### Task 4 — build wiring (DONE)
+- tsup entries {mcp, http}; banner createRequire shim fixes express CJS dynamic require in ESM bundle.
+- npm run build emits both; sync-plugin still copies only dist/mcp.js into plugin (verified).
+- Live checks: dist/http.js /healthz → 200 {ok:true}; dist/mcp.js answers initialize over stdin. 57/57 tests.
+- Not verified: Node 20 runtime (ran v22), no soak. Committed.
