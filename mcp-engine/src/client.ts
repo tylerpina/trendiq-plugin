@@ -16,7 +16,8 @@ interface FetchResponse {
   status: number;
   text: () => Promise<string>;
 }
-export type FetchLike = (url: string, init?: { signal?: AbortSignal }) => Promise<FetchResponse>;
+export type FetchInit = { signal?: AbortSignal; headers?: Record<string, string> };
+export type FetchLike = (url: string, init?: FetchInit) => Promise<FetchResponse>;
 
 export function buildUrl(baseUrl: string, path: string, query?: Record<string, unknown>): string {
   const base = baseUrl.replace(/\/+$/, "");
@@ -49,19 +50,26 @@ export class TrendiqClient {
   private readonly baseUrl: string;
   private readonly fetchImpl: FetchLike;
   private readonly timeoutMs: number;
+  private readonly bearerToken?: string;
 
-  constructor(baseUrl: string, opts: { fetchImpl?: FetchLike; timeoutMs?: number } = {}) {
+  constructor(
+    baseUrl: string,
+    opts: { fetchImpl?: FetchLike; timeoutMs?: number; bearerToken?: string } = {},
+  ) {
     this.baseUrl = baseUrl;
     this.fetchImpl = opts.fetchImpl ?? (globalThis.fetch as unknown as FetchLike);
     this.timeoutMs = opts.timeoutMs ?? 20000;
+    this.bearerToken = opts.bearerToken || undefined;
   }
 
   async get(path: string, query?: Record<string, unknown>): Promise<ClientResult> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    const init: FetchInit = { signal: controller.signal };
+    if (this.bearerToken) init.headers = { Authorization: `Bearer ${this.bearerToken}` };
     try {
       const url = buildUrl(this.baseUrl, path, query);
-      const res = await this.fetchImpl(url, { signal: controller.signal });
+      const res = await this.fetchImpl(url, init);
       const text = await res.text();
       let body: unknown = undefined;
       try {

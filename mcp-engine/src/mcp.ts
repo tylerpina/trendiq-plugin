@@ -8,7 +8,13 @@ const DEFAULT_BASE_URL = "https://trendiq.pro/api";
 
 export function createServer(client?: TrendiqClient): McpServer {
   const server = new McpServer({ name: "trendiq", version: "0.1.0" });
-  registerAll(server, client ?? new TrendiqClient(process.env.TRENDIQ_API_BASE_URL ?? DEFAULT_BASE_URL));
+  registerAll(
+    server,
+    client ??
+      new TrendiqClient(process.env.TRENDIQ_API_BASE_URL ?? DEFAULT_BASE_URL, {
+        bearerToken: process.env.TRENDIQ_MCP_API_TOKEN,
+      }),
+  );
   return server;
 }
 

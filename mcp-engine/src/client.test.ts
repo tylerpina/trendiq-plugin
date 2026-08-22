@@ -60,4 +60,41 @@ describe("TrendiqClient.get", () => {
     const r = await c.get("/health");
     expect(r).toMatchObject({ ok: false, status: 0 });
   });
+
+  it("sends Authorization header on every call when a bearer token is set", async () => {
+    const inits: Array<{ headers?: Record<string, string> } | undefined> = [];
+    const spyFetch = (async (_url: string, init?: any) => {
+      inits.push(init);
+      return fakeFetch(200, {})();
+    }) as any;
+    const c = new TrendiqClient("https://trendiq.pro/api", { fetchImpl: spyFetch, bearerToken: "tok-1" });
+    await c.get("/a");
+    await c.get("/b", { x: 1 });
+    expect(inits).toHaveLength(2);
+    for (const init of inits) {
+      expect(init?.headers?.Authorization).toBe("Bearer tok-1");
+    }
+  });
+
+  it("sends no Authorization header when no bearer token is set", async () => {
+    let seen: any;
+    const spyFetch = (async (_url: string, init?: any) => {
+      seen = init;
+      return fakeFetch(200, {})();
+    }) as any;
+    const c = new TrendiqClient("https://trendiq.pro/api", { fetchImpl: spyFetch });
+    await c.get("/health");
+    expect(seen?.headers?.Authorization).toBeUndefined();
+  });
+
+  it("treats an empty bearer token as absent", async () => {
+    let seen: any;
+    const spyFetch = (async (_url: string, init?: any) => {
+      seen = init;
+      return fakeFetch(200, {})();
+    }) as any;
+    const c = new TrendiqClient("https://trendiq.pro/api", { fetchImpl: spyFetch, bearerToken: "" });
+    await c.get("/health");
+    expect(seen?.headers?.Authorization).toBeUndefined();
+  });
 });
