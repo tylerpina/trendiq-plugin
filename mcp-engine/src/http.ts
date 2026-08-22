@@ -31,9 +31,12 @@ function jsonRpcError(id: unknown, code: number, message: string) {
 
 export function createHttpApp(options: HttpAppOptions = {}): express.Express {
   const app = express();
-  // Behind Railway's proxy (and supertest) the client IP arrives in
-  // X-Forwarded-For; trust it so per-IP limiting keys on the real client.
-  app.set("trust proxy", true);
+  // Railway's edge proxy is exactly one hop in front of this process, so it
+  // appends the real client address to X-Forwarded-For. Trusting exactly 1 hop
+  // makes req.ip the rightmost XFF entry (edge-appended client IP). Trusting
+  // `true` instead would resolve to the leftmost entry, which the client can
+  // spoof to rotate rate-limit keys.
+  app.set("trust proxy", 1);
 
   const envLimit = readRateLimitConfigFromEnv();
   const limiterConfig: RateLimiterConfig = {
@@ -62,6 +65,15 @@ export function createHttpApp(options: HttpAppOptions = {}): express.Express {
   ): void => {
     if (err instanceof SyntaxError && "body" in err) {
       res.status(400).json(jsonRpcError(null, -32700, "Parse error: request body is not valid JSON"));
+      return;
+    }
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "type" in err &&
+      (err as { type?: unknown }).type === "entity.too.large"
+    ) {
+      res.status(413).json(jsonRpcError(null, -32603, "Request body exceeds the size limit"));
       return;
     }
     next(err);
