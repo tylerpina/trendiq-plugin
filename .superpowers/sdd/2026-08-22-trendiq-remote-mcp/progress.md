@@ -11,3 +11,5 @@ Branch: `feat/remote-mcp-server` (from main @ 4fb482d). Lock: `.opencode/state/l
 - Smoke vs live API: exit 0; six endpoints 403 Premium-gated upstream (pre-existing account-tier, not a regression).
 - Not verified: full `npm run build` sync step (implementer avoided touching mcp-plugin/); premium-endpoint error path live.
 - Controller verified: git status clean-ish, npm test re-run green. Committed as SDK bump only.
+### Task 2 — shared factory (DONE)
+- createServer() confirmed stdio-free; added createAppStateless() wrapper + mcp.test.ts (InMemoryTransport pair, 20 tools each, independent instances). 35/35 tests, typecheck clean. Committed.
