@@ -13,3 +13,8 @@ Branch: `feat/remote-mcp-server` (from main @ 4fb482d). Lock: `.opencode/state/l
 - Controller verified: git status clean-ish, npm test re-run green. Committed as SDK bump only.
 ### Task 2 — shared factory (DONE)
 - createServer() confirmed stdio-free; added createAppStateless() wrapper + mcp.test.ts (InMemoryTransport pair, 20 tools each, independent instances). 35/35 tests, typecheck clean. Committed.
+### Task 3 — HTTP endpoint + rate limiter (DONE)
+- src/http.ts (express, stateless StreamableHTTP per request, 405 GET/DELETE, /healthz), src/rate-limit.ts (fixed window, injectable clock, trust proxy).
+- Timeout: Promise.race backstop → JSON-RPC -32000; upstream failures surface as MCP isError results via client's own 20s fetch bound.
+- 22 new tests; suite 57/57; typecheck clean. Committed.
+- Uncovered (disclosed): parseErrorHandler fallthrough plumbing; main()/listen blocks.
