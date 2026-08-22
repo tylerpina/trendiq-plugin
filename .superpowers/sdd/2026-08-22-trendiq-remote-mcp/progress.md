@@ -23,3 +23,9 @@ Branch: `feat/remote-mcp-server` (from main @ 4fb482d). Lock: `.opencode/state/l
 - npm run build emits both; sync-plugin still copies only dist/mcp.js into plugin (verified).
 - Live checks: dist/http.js /healthz → 200 {ok:true}; dist/mcp.js answers initialize over stdin. 57/57 tests.
 - Not verified: Node 20 runtime (ran v22), no soak. Committed.
+### Review gate after Tasks 3–4 (spec-fidelity-reviewer)
+- Clauses 1,2,4,6,7,8,10 PASS. F1 WEAKENED (clause 5): trust proxy=true → req.ip from client-controlled leftmost XFF — limiter bypassable behind Railway. F2 PARTIAL (clause 3): rebuilt plugin bundle uncommitted + banner reaches shipped artifact (behavior verified fine). F3: timeout env knob untested.
+### Fix lane (DONE)
+- trust proxy=1; rewrote 429 test that was asserting the attack vector; added spoof-resistance test (fails under old code), XFF-less keying test, readTimeoutMsFromEnv parsing tests, 413 JSON-RPC handler for oversized bodies.
+- Rebuilt mcp-plugin/engine/dist/mcp.js committed after stdio verification (initialize ok, 20 tools). Suite 63/63; typecheck clean. Committed.
+- Not verified: real multi-hop Railway proxy chain behavior — confirm header handling at deploy (Task 5).
