@@ -158,50 +158,67 @@ describe("method and route policy", () => {
   });
 });
 
-// Production topology behind Railway: the client connects to Railway's edge
-// proxy (one hop). The proxy appends the real client address to any
-// X-Forwarded-For chain the client sent, then forwards over a socket whose
-// remote address is the edge itself. With `trust proxy` = 1, req.ip resolves
-// to the rightmost XFF entry when present, else the socket address.
-describe("per-IP rate limiting under trust-proxy=1", () => {
-  async function statusOf(app: Express, xff?: string): Promise<number> {
-    const req = postMcp(app, { jsonrpc: "2.0", id: 1, method: "ping" });
-    const res = await (xff === undefined ? req : req.set("X-Forwarded-For", xff));
-    return res.status;
+// Rate-limit keying, in precedence order: X-Real-IP (set by Railway's edge,
+// not the client) > req.ip (rightmost XFF under trust-proxy=1, or socket
+// address locally) > "unknown".
+//
+// HONESTY NOTE: these local tests can only prove the middleware's PRECEDENCE
+// rules. The claim that makes X-Real-IP trustworthy — that Railway's edge
+// overwrites it so a client cannot spoof it — is NOT testable here; it was
+// verified empirically against the live post-deploy environment (65 rotating-
+// XFF POSTs → zero 429s before this fix). See the comment block in http.ts.
+describe("per-IP rate limiting keyed on edge-set X-Real-IP", () => {
+  async function statusOf(
+    app: Express,
+    opts: { xff?: string; realIp?: string } = {},
+  ): Promise<number> {
+    let req = postMcp(app, { jsonrpc: "2.0", id: 1, method: "ping" });
+    if (opts.xff !== undefined) req = req.set("X-Forwarded-For", opts.xff);
+    if (opts.realIp !== undefined) req = req.set("X-Real-IP", opts.realIp);
+    return (await req).status;
   }
 
-  it("requests arriving without a client-set XFF are keyed on the socket address", async () => {
+  it("requests arriving without X-Real-IP fall back to req.ip (socket address here)", async () => {
     const app = makeApp({ rateLimit: { limit: 1, windowMs: 60_000 } });
     expect(await statusOf(app)).not.toBe(429);
     expect(await statusOf(app)).toBe(429);
   });
 
-  it("the 61st request from one client within the window gets 429 while a second client is unaffected", async () => {
-    // Single-entry XFF models what the edge appends when the client sent none.
+  it("requests with X-Real-IP are keyed on it: 61st from one X-Real-IP gets 429 despite rotating XFF values", async () => {
+    // Each request carries a different fake X-Forwarded-For — the exact
+    // rotation that bypassed the old limiter behind Railway — but shares one
+    // X-Real-IP, so all 61 land in the same bucket.
     const app = makeApp({ rateLimit: { limit: 60, windowMs: 60_000 } });
     for (let i = 0; i < 60; i++) {
-      expect(await statusOf(app, "10.0.0.1")).not.toBe(429);
+      expect(await statusOf(app, { xff: `6.6.${i}.${i}`, realIp: "203.0.113.7" })).not.toBe(429);
     }
-    expect(await statusOf(app, "10.0.0.1")).toBe(429);
-    expect(await statusOf(app, "10.0.0.2")).not.toBe(429);
+    expect(await statusOf(app, { xff: "6.6.99.99", realIp: "203.0.113.7" })).toBe(429);
   }, 30_000);
 
-  it("a spoofed leftmost XFF never becomes the limiter key: two clients behind one proxy hop share the limit", async () => {
-    // Both "clients" sit behind the same upstream proxy hop, so their requests
-    // arrive with the same rightmost (edge-appended) address. Each injects a
-    // distinct fake leftmost entry hoping to rotate keys. Under trust-proxy=1
-    // only the rightmost entry is trusted, so the second request must be
-    // blocked even though the fake values differ.
+  it("two different X-Real-IP values get independent buckets even with identical XFF", async () => {
     const app = makeApp({ rateLimit: { limit: 1, windowMs: 60_000 } });
-    expect(await statusOf(app, "6.6.6.6, 10.9.9.9")).not.toBe(429);
-    expect(await statusOf(app, "7.7.7.7, 10.9.9.9")).toBe(429);
+    expect(await statusOf(app, { xff: "10.9.9.9", realIp: "203.0.113.1" })).not.toBe(429);
+    expect(await statusOf(app, { xff: "10.9.9.9", realIp: "203.0.113.2" })).not.toBe(429);
+    expect(await statusOf(app, { xff: "10.9.9.9", realIp: "203.0.113.1" })).toBe(429);
+    expect(await statusOf(app, { xff: "10.9.9.9", realIp: "203.0.113.2" })).toBe(429);
+  });
+
+  it("when present, X-Real-IP takes precedence over both client-supplied XFF and the socket address", async () => {
+    // Same X-Real-IP, different spoofed XFF chains AND a fresh socket each
+    // time: still one bucket. This replaces the old "spoofed leftmost XFF"
+    // assertion — the mechanism now is X-Real-IP precedence, since without an
+    // edge overwriting headers, a rightmost client-supplied XFF entry would
+    // resolve as req.ip under trust-proxy=1.
+    const app = makeApp({ rateLimit: { limit: 1, windowMs: 60_000 } });
+    expect(await statusOf(app, { xff: "6.6.6.6, 10.9.9.9", realIp: "198.51.100.5" })).not.toBe(429);
+    expect(await statusOf(app, { xff: "7.7.7.7, 10.8.8.8", realIp: "198.51.100.5" })).toBe(429);
   });
 
   it("over-limit responses include Retry-After", async () => {
     const app = makeApp({ rateLimit: { limit: 1, windowMs: 60_000 } });
-    expect(await statusOf(app, "10.0.1.1")).not.toBe(429);
+    expect(await statusOf(app, { realIp: "10.0.1.1" })).not.toBe(429);
     const res = await postMcp(app, { jsonrpc: "2.0", id: 1, method: "ping" }).set(
-      "X-Forwarded-For",
+      "X-Real-IP",
       "10.0.1.1",
     );
     expect(res.status).toBe(429);

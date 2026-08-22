@@ -31,11 +31,17 @@ function jsonRpcError(id: unknown, code: number, message: string) {
 
 export function createHttpApp(options: HttpAppOptions = {}): express.Express {
   const app = express();
-  // Railway's edge proxy is exactly one hop in front of this process, so it
-  // appends the real client address to X-Forwarded-For. Trusting exactly 1 hop
-  // makes req.ip the rightmost XFF entry (edge-appended client IP). Trusting
-  // `true` instead would resolve to the leftmost entry, which the client can
-  // spoof to rotate rate-limit keys.
+  // Keep `trust proxy` at 1: Railway's edge is exactly one hop in front of
+  // this process, so req.ip resolves to the rightmost XFF entry (or the socket
+  // address), which stays sane for non-limiter uses.
+  //
+  // Do NOT use req.ip as the rate-limit key, though. Empirically verified on
+  // the live Railway deploy (2026-08): Railway's edge passes client-supplied
+  // X-Forwarded-For through, so the rightmost XFF entry — what trust-proxy=1
+  // resolves as req.ip — is attacker-controlled. 65 POSTs to /mcp with rotating
+  // fake XFF values produced zero 429s. Railway's documented edge-set client IP
+  // header is X-Real-IP (docs.railway.com/networking/public-networking), which
+  // the edge overwrites, so the limiter keys on it when present.
   app.set("trust proxy", 1);
 
   const envLimit = readRateLimitConfigFromEnv();
@@ -48,7 +54,10 @@ export function createHttpApp(options: HttpAppOptions = {}): express.Express {
   const timeoutMs = options.timeoutMs ?? readTimeoutMsFromEnv();
 
   const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-    const decision = limiter.check(req.ip ?? "unknown");
+    const rawRealIp = req.headers["x-real-ip"];
+    const realIp = Array.isArray(rawRealIp) ? rawRealIp[0] : rawRealIp;
+    const key = realIp ?? req.ip ?? "unknown";
+    const decision = limiter.check(key);
     if (!decision.allowed) {
       res.setHeader("Retry-After", String(decision.retryAfterSec));
       res.status(429).json(jsonRpcError(null, -32000, "Rate limit exceeded; retry later"));
