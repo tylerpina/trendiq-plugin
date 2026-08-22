@@ -21151,17 +21151,21 @@ var TrendiqClient = class {
   baseUrl;
   fetchImpl;
   timeoutMs;
+  bearerToken;
   constructor(baseUrl, opts = {}) {
     this.baseUrl = baseUrl;
     this.fetchImpl = opts.fetchImpl ?? globalThis.fetch;
     this.timeoutMs = opts.timeoutMs ?? 2e4;
+    this.bearerToken = opts.bearerToken || void 0;
   }
   async get(path, query) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    const init = { signal: controller.signal };
+    if (this.bearerToken) init.headers = { Authorization: `Bearer ${this.bearerToken}` };
     try {
       const url = buildUrl(this.baseUrl, path, query);
-      const res = await this.fetchImpl(url, { signal: controller.signal });
+      const res = await this.fetchImpl(url, init);
       const text = await res.text();
       let body = void 0;
       try {
@@ -21459,7 +21463,12 @@ function registerAll(server, client) {
 var DEFAULT_BASE_URL = "https://trendiq.pro/api";
 function createServer(client) {
   const server = new McpServer({ name: "trendiq", version: "0.1.0" });
-  registerAll(server, client ?? new TrendiqClient(process.env.TRENDIQ_API_BASE_URL ?? DEFAULT_BASE_URL));
+  registerAll(
+    server,
+    client ?? new TrendiqClient(process.env.TRENDIQ_API_BASE_URL ?? DEFAULT_BASE_URL, {
+      bearerToken: process.env.TRENDIQ_MCP_API_TOKEN
+    })
+  );
   return server;
 }
 function createAppStateless(client) {
