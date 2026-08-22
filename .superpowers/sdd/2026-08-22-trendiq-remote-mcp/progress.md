@@ -29,3 +29,10 @@ Branch: `feat/remote-mcp-server` (from main @ 4fb482d). Lock: `.opencode/state/l
 - trust proxy=1; rewrote 429 test that was asserting the attack vector; added spoof-resistance test (fails under old code), XFF-less keying test, readTimeoutMsFromEnv parsing tests, 413 JSON-RPC handler for oversized bodies.
 - Rebuilt mcp-plugin/engine/dist/mcp.js committed after stdio verification (initialize ok, 20 tools). Suite 63/63; typecheck clean. Committed.
 - Not verified: real multi-hop Railway proxy chain behavior — confirm header handling at deploy (Task 5).
+### Test-discriminator gate (DONE)
+- 4 mutations, all caught: trust-proxy revert → spoof-XFF test fails (also 61st-request test); limiter disabled → 4 tests red; window-reset removed → reset unit fails; timeout race bypassed → hung-upstream test times out. No undetected mutations. Tree clean, 63/63 green after reverts.
+### Task 5 — local artifacts (DONE, DEPLOY PARKED)
+- Dockerfile (3-stage, non-root), railway.json (DOCKERFILE builder, /healthz healthcheck), .dockerignore, build:bundle script.
+- Docker build + run verified: /healthz 200 {ok:true}, POST /mcp initialize 200 with serverInfo. Container/image cleaned up.
+- DEPLOY PARKED: needs user's Railway access (no railway CLI/credentials in this environment). Env to set at deploy: TRENDIQ_API_BASE_URL=https://trendiq.pro/api.
+- Not verified: live API calls through the container; real Railway proxy header behavior.
