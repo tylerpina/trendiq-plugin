@@ -12,6 +12,10 @@ export function createServer(client?: TrendiqClient): McpServer {
   return server;
 }
 
+export function createAppStateless(client?: TrendiqClient): McpServer {
+  return createServer(client);
+}
+
 async function main(): Promise<void> {
   const server = createServer();
   await server.connect(new StdioServerTransport());
