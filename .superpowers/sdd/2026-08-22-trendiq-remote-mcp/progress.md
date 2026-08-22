@@ -36,3 +36,12 @@ Branch: `feat/remote-mcp-server` (from main @ 4fb482d). Lock: `.opencode/state/l
 - Docker build + run verified: /healthz 200 {ok:true}, POST /mcp initialize 200 with serverInfo. Container/image cleaned up.
 - DEPLOY PARKED: needs user's Railway access (no railway CLI/credentials in this environment). Env to set at deploy: TRENDIQ_API_BASE_URL=https://trendiq.pro/api.
 - Not verified: live API calls through the container; real Railway proxy header behavior.
+### Task 5 deploy + empirical verification (DONE)
+- Deployed via railway CLI from local tree: service trendiq-mcp (bd0ebe75) in project trendIQ, env production. Domain https://trendiq-mcp-production.up.railway.app (target port auto → 8080).
+- Live checks: /healthz 200 {ok:true}; POST /mcp without Accept both-types → 406 (spec-correct); initialize 200 serverInfo; tools/list = exactly 20; tools/call health ok (upstream live); search_markets q=presidential returns real Kalshi markets — full E2E through upstream.
+### RATE-LIMIT DEFECT FOUND IN PROD, FIXED, PROVEN
+- Prod probe A (pre-fix): 65 POSTs rotating fake XFF on /mcp → zero 429 (vs 429s without header) ⇒ trust-proxy=1 fix insufficient: Railway passes client XFF through, rightmost entry attacker-controlled.
+- Railway docs: X-Real-IP is the edge-set client-IP header (specs-and-limits).
+- Fix d4b553f: limiter keyed on X-Real-IP → req.ip fallback; tests updated (64/64, typecheck clean). Redeployed 46749545 SUCCESS.
+- Post-fix prod probes: fake-XFF-only → 429s exactly at #61; fake rotating X-Real-IP → still 429s at #61 (edge overwrites client-supplied X-Real-IP). Both spoof vectors empirically closed.
+- Not done: scan_arbitrage timeout falsifier — blocked by Premium-gated 403 at current account tier (disclosed in Task 1 smoke too).
