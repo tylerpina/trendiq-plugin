@@ -19,6 +19,11 @@ See `../references/domain-primer.md`.
    - `whale_cluster`, `pro_convergence` — Polymarket only.
    - For `pro_convergence`, the inferred BUY->YES side is UNRELIABLE and its
      winRate/pnl detail are placeholders — do not report them as fact.
-4. **Escalate.** On a high-severity `whale_cluster`, take the named wallets into
+4. **Pair the tape with news (Polymarket).** `mcp__trendiq__get_news_feed`
+   (filter by `category`, page with `cursor`) surfaces fresh articles with their
+   linked markets ranked by link strength — a signal plus a same-day article on
+   the same market is a much stronger read than either alone. For one market's
+   full news context, `mcp__trendiq__get_market_news(conditionId)`.
+5. **Escalate.** On a high-severity `whale_cluster`, take the named wallets into
    `investigate-a-whale`; on a `volume_spike`/`price_movement`, into
    `analyze-a-market`.

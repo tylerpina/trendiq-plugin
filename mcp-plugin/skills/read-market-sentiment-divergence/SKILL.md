@@ -19,4 +19,6 @@ Polymarket only. See `../references/domain-primer.md` for sentiment caveats.
    <= 500 trades AND <= 24h, so it undercounts busy markets; market-makers are
    filtered out. Expensive (3-min cache) — read once, don't poll.
 5. **Corroborate.** Optionally `mcp__trendiq__get_whale_trades` for this market
-   and escalate notable wallets to `investigate-a-whale`.
+   and escalate notable wallets to `investigate-a-whale`;
+   `mcp__trendiq__get_market_news(conditionId)` often supplies the catalyst that
+   explains which side of the divergence is right.

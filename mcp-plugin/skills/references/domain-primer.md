@@ -47,7 +47,15 @@ interpreting tool output.
   normalized by the MCP client into one envelope; tool errors read
   `TrendIQ API error (<status> <code?>): <message>`.
 - **Cache TTLs** — don't poll faster than: whale 5s, orderbook 5s, candles 60s,
-  search 2min, markets 5min, sentiment 3min.
+  news 1min, search 2min, markets 5min, sentiment 3min.
+- **News is Polymarket-only** (Kalshi is excluded by its Dev Agreement) and
+  windowed to the last 7 days. `get_market_news(conditionId)` returns `related`
+  (articles linked to THAT market; `score` = linker P(yes)) plus the market's
+  `category` feed; non-Polymarket ids return `{ unsupported: true }`.
+  `get_news_feed` is the global feed — only articles with >= 1 linked market,
+  newest first, keyset-paginated (pass `nextCursor` back as `cursor`; null =
+  last page); categories: politics / econ / sports / crypto. Each article's
+  `markets[]` is ordered by `rank` (1 = strongest link).
 - **Robinhood** supports only `search_markets` / `get_market` / `get_candles`
   (derived data); it has NO orderbook/trades/sentiment/correlated/scanner.
 - **Feature-gate note.** TrendIQ currently runs with the subscription gate OFF,

@@ -25,14 +25,18 @@ data caveats referenced below.
    that is the signal — escalate to `read-market-sentiment-divergence`.
 6. **Smart money.** `mcp__trendiq__get_whale_trades` and scan for this market;
    for a notable wallet, escalate to `investigate-a-whale`.
-7. **Context.** `mcp__trendiq__get_correlated_markets` to see what moves with it
+7. **News (Polymarket only).** `mcp__trendiq__get_market_news` with the
+   `conditionId` — `related` articles (ranked by linker `score` = P(yes)) are
+   the catalyst layer: what happened that the price is reacting to. 7-day
+   window, newest first.
+8. **Context.** `mcp__trendiq__get_correlated_markets` to see what moves with it
    (bidirectional Kalshi<->Poly).
-8. **Synthesize.** State a directional view with the evidence, and explicitly
+9. **Synthesize.** State a directional view with the evidence, and explicitly
    flag what is unknown (null win rates, no-data sentiment, thin liquidity).
 
 > **Robinhood markets:** only steps 1–3 apply (search, details, candles).
-> Robinhood has no order book, trades, sentiment, correlation, or whale data —
-> skip steps 4–7.
+> Robinhood has no order book, trades, sentiment, correlation, news, or whale
+> data — skip steps 4–8.
 
 ## Don't
 - Don't treat a null win rate as 0% or a 50/50 sentiment as "neutral conviction."
