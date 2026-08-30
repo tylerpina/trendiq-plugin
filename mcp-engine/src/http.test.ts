@@ -60,11 +60,11 @@ describe("POST /mcp", () => {
     expect(res.body.result.protocolVersion).toBe("2025-06-18");
   });
 
-  it("tools/list returns exactly 20 tools", async () => {
+  it("tools/list returns exactly 22 tools", async () => {
     const app = makeApp();
     const res = await postMcp(app, { jsonrpc: "2.0", id: 2, method: "tools/list" });
     expect(res.status).toBe(200);
-    expect(res.body.result.tools).toHaveLength(20);
+    expect(res.body.result.tools).toHaveLength(22);
   });
 
   it("tools/call health succeeds via injected client", async () => {
@@ -264,4 +264,31 @@ describe("oversized request bodies", () => {
 
 afterEach(() => {
   mcpMockState.failConstruction = false;
+});
+
+// The news tools were added after the limiter shipped; this pins the guarantee
+// that they sit behind the same /mcp rate limit as every other tool — a
+// tools/call to a news tool from an over-limit key gets 429 before any
+// upstream request happens.
+describe("news tools are behind the /mcp rate limiter", () => {
+  it("get_news_feed tools/call from an over-limit X-Real-IP gets 429, not an upstream call", async () => {
+    let upstreamCalls = 0;
+    const countingFetch: FetchLike = async () => {
+      upstreamCalls += 1;
+      return { ok: true, status: 200, text: async () => JSON.stringify({ articles: [], nextCursor: null, windowDays: 7 }) };
+    };
+    const client = new TrendiqClient("https://unused.test/api", { fetchImpl: countingFetch });
+    const app = createHttpApp({ client, rateLimit: { limit: 1, windowMs: 60_000 } });
+    const call = { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "get_news_feed", arguments: { limit: 5 } } };
+
+    const first = await postMcp(app, call).set("X-Real-IP", "203.0.113.9");
+    expect(first.status).toBe(200);
+    expect(first.body.result.isError).toBeFalsy();
+    expect(upstreamCalls).toBe(1);
+
+    const second = await postMcp(app, call).set("X-Real-IP", "203.0.113.9");
+    expect(second.status).toBe(429);
+    expect(second.headers["retry-after"]).toBeDefined();
+    expect(upstreamCalls).toBe(1);
+  });
 });

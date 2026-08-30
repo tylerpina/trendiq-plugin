@@ -21437,6 +21437,27 @@ var signalTools = [
   }
 ];
 
+// src/tools/news.ts
+var NEWS_CATEGORY = external_exports.enum(["politics", "econ", "sports", "crypto"]);
+var newsTools = [
+  {
+    name: "get_market_news",
+    description: "News for one Polymarket market (by conditionId): { related, category, categoryLabel, windowDays }. `related` = articles linked to THIS market (score = linker P(yes)); `category` = the market's category feed. 7-day window, newest first, <=20 per section. Polymarket only \u2014 other platforms return { unsupported: true }. Server-cached, do not poll.",
+    shape: { id: external_exports.string().min(1).describe("Polymarket conditionId.") },
+    toReq: (a) => ({ path: `/news/polymarket/${encodeURIComponent(a.id)}` })
+  },
+  {
+    name: "get_news_feed",
+    description: "Global news feed: articles from the last 7 days with >=1 linked Polymarket market, newest first, keyset-paginated. Returns { articles: [{ id, url, source, title, lede, publishedAt, category, markets: [{ id, question, eventTitle, url, category, endDate, active, score, rank }] }], nextCursor, windowDays }. Pass nextCursor back as cursor for the next page; null = last page.",
+    shape: {
+      category: NEWS_CATEGORY.optional().describe("Filter to one category; default all."),
+      limit: external_exports.number().int().positive().max(100).optional().describe("Articles per page (default 50, max 100)."),
+      cursor: external_exports.string().optional().describe("Opaque cursor from a prior page's nextCursor.")
+    },
+    toReq: (a) => ({ path: "/news/feed", query: { category: a.category, limit: a.limit, cursor: a.cursor } })
+  }
+];
+
 // src/tools/index.ts
 var healthTools = [
   {
@@ -21453,6 +21474,7 @@ var allTools = [
   ...arbitrageTools,
   ...sentimentTools,
   ...signalTools,
+  ...newsTools,
   ...healthTools
 ];
 function registerAll(server, client) {

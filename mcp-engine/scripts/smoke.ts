@@ -81,6 +81,14 @@ async function main() {
 
   await run("get_signals", { limit: 10 });
 
+  // ── News (Polymarket only; 7-day window) ────────────────────────────────────
+  // get_news_feed → { articles: [{..., markets: [...]}], nextCursor, windowDays }
+  const feed = await run("get_news_feed", { limit: 3 });
+  const newsMarketId = dig(feed.ok ? feed.data : undefined, ["articles", "0", "markets", "0", "id"]);
+  console.log("newsMarketId:", newsMarketId);
+  if (newsMarketId) await run("get_market_news", { id: newsMarketId });
+  await run("get_news_feed", { category: "politics", limit: 2 });
+
   // ── Screener enum probe ──────────────────────────────────────────────────────
   // The API silently accepts any string for sortBy / timeRemaining and falls back
   // to defaults for unknown values — all calls return 200 regardless.

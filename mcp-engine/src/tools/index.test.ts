@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { allTools } from "./index";
 
 describe("allTools", () => {
-  it("registers exactly 20 tools", () => {
-    expect(allTools.length).toBe(20);
+  it("registers exactly 22 tools", () => {
+    expect(allTools.length).toBe(22);
   });
   it("has unique tool names", () => {
     const names = allTools.map((t) => t.name);

@@ -7,6 +7,7 @@ import { screenerTools } from "./screener";
 import { arbitrageTools } from "./arbitrage";
 import { sentimentTools } from "./sentiment";
 import { signalTools } from "./signals";
+import { newsTools } from "./news";
 
 const healthTools: ToolDef[] = [
   {
@@ -24,6 +25,7 @@ export const allTools: ToolDef[] = [
   ...arbitrageTools,
   ...sentimentTools,
   ...signalTools,
+  ...newsTools,
   ...healthTools,
 ];
 
