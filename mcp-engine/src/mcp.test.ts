@@ -25,7 +25,7 @@ async function connectClient() {
 }
 
 describe("createAppStateless", () => {
-  it("yields independent instances that each complete initialize + tools/list with 22 tools", async () => {
+  it("yields independent instances that each complete initialize + tools/list with 26 tools", async () => {
     const first = await connectClient();
     const second = await connectClient();
 
@@ -34,8 +34,8 @@ describe("createAppStateless", () => {
     const firstTools = await first.client.listTools();
     const secondTools = await second.client.listTools();
 
-    expect(firstTools.tools).toHaveLength(22);
-    expect(secondTools.tools).toHaveLength(22);
+    expect(firstTools.tools).toHaveLength(26);
+    expect(secondTools.tools).toHaveLength(26);
 
     const firstNames = firstTools.tools.map((t) => t.name).sort();
     const secondNames = secondTools.tools.map((t) => t.name).sort();

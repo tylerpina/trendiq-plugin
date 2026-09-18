@@ -60,11 +60,11 @@ describe("POST /mcp", () => {
     expect(res.body.result.protocolVersion).toBe("2025-06-18");
   });
 
-  it("tools/list returns exactly 22 tools", async () => {
+  it("tools/list returns exactly 26 tools", async () => {
     const app = makeApp();
     const res = await postMcp(app, { jsonrpc: "2.0", id: 2, method: "tools/list" });
     expect(res.status).toBe(200);
-    expect(res.body.result.tools).toHaveLength(22);
+    expect(res.body.result.tools).toHaveLength(26);
   });
 
   it("tools/call health succeeds via injected client", async () => {

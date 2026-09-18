@@ -4,7 +4,8 @@ Make a Claude agent a **prediction-market analyst**. This plugin exposes
 [TrendIQ](https://trendiq.pro)'s analytics over Kalshi and Polymarket as
 **read-only MCP tools**, plus **skills** that teach an agent how to combine them
 into real analysis — whale-wallet forensics, cross-platform arbitrage, sentiment
-divergence, real-time signals, and custom-indicator authoring.
+divergence, real-time signals, sports edge pricing, and custom-indicator
+authoring.
 
 It's a thin client over TrendIQ's public API (`https://trendiq.pro/api`), so it
 needs **no credentials** and runs as a local stdio server.
@@ -32,7 +33,7 @@ TRENDIQ_API_BASE_URL=http://localhost:3001/api
 
 ## What's inside
 
-**20 read-only tools** (`mcp__trendiq__*`):
+**26 read-only tools** (`mcp__trendiq__*`):
 
 - **Market data** — `search_markets`, `list_markets`, `get_market`,
   `get_candles`, `get_orderbook`, `get_trades`, `get_correlated_markets`
@@ -42,9 +43,12 @@ TRENDIQ_API_BASE_URL=http://localhost:3001/api
 - **Arbitrage** — `scan_arbitrage`, `scan_arbitrage_pair`,
   `list_arbitrage_pairs`, `get_arbitrage_config`
 - **Sentiment / Signals** — `get_sentiment`, `get_signals`
+- **News** — `get_market_news`, `get_news_feed`
+- **Sports** — `list_sports_games`, `get_sports_game`, `get_sports_signals`,
+  `get_sports_whale_activity`
 - **Utility** — `health`
 
-**7 analyst skills:**
+**8 analyst skills:**
 
 - `analyze-a-market` — full directional read on a single market
 - `investigate-a-whale` — verify a wallet's win rate (redemption-bias aware)
@@ -53,6 +57,8 @@ TRENDIQ_API_BASE_URL=http://localhost:3001/api
 - `screen-for-opportunities` — filter/sort tradeable markets
 - `interpret-signals` — react to volume spikes / whale clusters / pro convergence
 - `create-indicator` — author any valid TrendIQ custom-indicator formula
+- `find-a-sports-edge` — line shopping and same-game arbitrage across Kalshi
+  and Polymarket, after fees, plus sharp flow and signals on a game
 
 ## Development
 
