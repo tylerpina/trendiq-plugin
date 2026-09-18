@@ -8,6 +8,7 @@ import { arbitrageTools } from "./arbitrage";
 import { sentimentTools } from "./sentiment";
 import { signalTools } from "./signals";
 import { newsTools } from "./news";
+import { sportsTools } from "./sports";
 
 const healthTools: ToolDef[] = [
   {
@@ -26,6 +27,7 @@ export const allTools: ToolDef[] = [
   ...sentimentTools,
   ...signalTools,
   ...newsTools,
+  ...sportsTools,
   ...healthTools,
 ];
 

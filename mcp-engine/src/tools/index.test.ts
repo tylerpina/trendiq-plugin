@@ -2,8 +2,15 @@ import { describe, it, expect } from "vitest";
 import { allTools } from "./index";
 
 describe("allTools", () => {
-  it("registers exactly 22 tools", () => {
-    expect(allTools.length).toBe(22);
+  it("registers exactly 26 tools", () => {
+    expect(allTools.length).toBe(26);
+  });
+  it("includes the 4 sports tools", () => {
+    const names = allTools.map((t) => t.name);
+    expect(names).toContain("list_sports_games");
+    expect(names).toContain("get_sports_game");
+    expect(names).toContain("get_sports_signals");
+    expect(names).toContain("get_sports_whale_activity");
   });
   it("has unique tool names", () => {
     const names = allTools.map((t) => t.name);
